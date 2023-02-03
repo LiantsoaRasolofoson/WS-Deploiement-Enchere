@@ -156,6 +156,8 @@ public class EnchereController {
             List<V_Enchere> liste = v.getAll(c);
             for( V_Enchere e : liste ){
                 System.out.println(e.getPrixEnchere());
+                e.setImages(e.allImages());
+                e.setOneImage(e.oneImages());
             }
             System.out.println("Eto t "+liste.size());
             data.put("data", liste);
