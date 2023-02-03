@@ -108,6 +108,8 @@ public class OffreController {
             throws Exception {
         try {
             isTokenExipered(tokenValues);
+            Token t = tokenRepository.getToken(tokenValues);
+            offre.setIdUtilisateur(t.getIdUtilisateur());
             V_Enchere e = v_enchereRepository.getEnchere(offre.getIdEnchere());
             e.isEncherable();
             Offre max = offreRepository.getOffreMax(offre.getIdEnchere());
