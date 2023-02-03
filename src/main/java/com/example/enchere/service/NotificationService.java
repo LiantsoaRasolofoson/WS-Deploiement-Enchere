@@ -136,7 +136,7 @@ public class NotificationService {
 
                     Compte fournisseur = compteRepository.getCompte(enchere.getIdUtilisateur());
                     Commission c = commissionRepository.getCommission();
-                    double soldes = (max.getPrixOffre()*c.getTaux())/100;
+                    double soldes = fournisseur.getSolde()+(max.getPrixOffre()*c.getTaux())/100;
                     fournisseur.setSolde(soldes);
                     compteRepository.save(fournisseur);
 
