@@ -4,15 +4,51 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+
+import com.example.enchere.modele.Enchere;
+import com.example.enchere.modele.EnchereVendu;
+import com.example.enchere.modele.Notifications;
+import com.example.enchere.modele.Offre;
+import com.example.enchere.modele.Utilisateur;
+import com.example.enchere.repository.EnchereRepository;
+import com.example.enchere.repository.EnchereVenduRepository;
+import com.example.enchere.repository.NotificationsRepository;
+import com.example.enchere.repository.OffreRepository;
 
 /**
  * Create by Weslei Dias.
  **/
+@Component
 public class NotificationService {
+
+    @Autowired
+    private EnchereRepository enchereRepository;
+
+    @Autowired
+    private EnchereVenduRepository enchereVenduRepository;
+
+    @Autowired
+    private NotificationsRepository notificationsRepository;
+
+    @Autowired
+    private OffreRepository offreRepository;
 
     public static final String REST_API_KEY = "MWRlNDVlOWUtYmNiMC00NDE1LTlhY2ItZTM4OWQ1YTVhMzk2";
     public static final String APP_ID = "a041247f-373d-40a0-bda9-0dbc7756deec";
+
+
 
     public static void sendMessageToAllUsers(String message) {
         try {
@@ -72,13 +108,38 @@ public class NotificationService {
         return jsonResponse;
     }
 
+    public void finEnchere(){
+        List <Enchere> liste = enchereRepository.getAllNonTermine();
+        System.out.println("Eeeeee "+liste.size());
+        for( Enchere enchere : liste ){
+            if( enchere.isTerminated() == true ){
+                String n = "Votre enchere dont le nom est "+enchere.getNom()+" est terminee";
+                Notifications notif = new Notifications(0, enchere.getIdUtilisateur(), n, 0);
+                notificationsRepository.save(notif);
+                Offre max = offreRepository.getOffreMax(enchere.getIdEnchere());
+                if( max != null ){
+                    EnchereVendu ev = new EnchereVendu(max.getIdEnchere(), max.getIdOffre());
+                    enchereVenduRepository.save(ev);
+                }
+                this.sendMessageToUser(n, enchere.getIdUtilisateur());
+                List <Utilisateur> users = offreRepository.getAllOffre(enchere.getIdEnchere());
+                System.out.println("Eto size "+users.size());
+                for( Utilisateur u : users ){
+                    this.sendMessageToUser(n, u.getIdUtilisateur());
+                }
+            }
+        }
+    }
+
     public static void sendMessageToUser(String message, int userId) {
         try {
+
+            RestTemplate restTemplate = new RestTemplate();
 
             String jsonResponse;
 
             
-            URL url = new URL("https://onesignal.com/api/v1/notifications");
+            /*URL url = new URL("https://onesignal.com/api/v1/notifications");
             HttpURLConnection con = (HttpURLConnection)url.openConnection();
             con.setUseCaches(false);
             con.setDoOutput(true);
@@ -108,10 +169,37 @@ public class NotificationService {
             System.out.println("httpResponse: " + httpResponse);
 
             jsonResponse = mountResponseRequest(con, httpResponse);
-            System.out.println("jsonResponse:\n" + jsonResponse);
+            System.out.println("jsonResponse:\n" + jsonResponse);*/
+
+      
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization","Basic "+REST_API_KEY);
+            headers.set("accept","application/json");
+            headers.set("content-type","application/json");
+
+            Map<String,Object> data = new HashMap<>();
+            data.put("app_id",APP_ID);
+            data.put("included_segments",Arrays.asList("Subscribed Users"));
+            data.put("include_external_user_ids",userId);
+
+            Map<String,String> contents = new HashMap<>();
+            contents.put("en",message);
+            
+            Map<String,String> headings = new HashMap<>();
+            headings.put("en","Enchère terminée");
+
+            data.put("contents",contents);
+            data.put("headings",headings);
+            data.put("name","INTERNAL_CAMPAIGN_NAME");
+
+
+            HttpEntity <Map<String,Object>> request = new HttpEntity<>(data,headers);
+            ResponseEntity response = restTemplate.postForEntity("https://onesignal.com/api/v1/notifications", request, Object.class);
 
         } catch(Throwable t) {
             t.printStackTrace();
         }
     }
+
+    
 }
