@@ -119,7 +119,7 @@ public class OffreController {
                 updateLastOffre(max);
             }
             Map<String, Object> data = new HashMap<String, Object>();
-            data.put("data", new SuccessRetour("Votre offre a été ajouté avec succès"));
+            data.put("data", historiqueEnchereRepository.getHistoriques(e.getIdEnchere()));
             return data;
         } catch (Exception e) {
             throw e;
