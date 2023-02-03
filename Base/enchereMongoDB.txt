@@ -1,0 +1,19 @@
+db.HistoriqueEnchere.insert(
+    {
+        "utilisateur": {
+            "idUtilisateur": 3,
+            "nom": "RAKOTO",
+            "prenom": "Jean",
+            "email": "Jean@gmail.com",
+            "motDePasse": "jean123",
+            "contact": "0324496385",
+            "adresse": "Lot 116 II A Nanisana",
+            "idGenre": 1,
+            "dateDeNaissance": "1990-10-11T21:00:00.000+00:00"
+        },
+        "idOffre": 1,
+        "idEnchere": 1,
+        "prixOffre": 120000.0,
+        "dateOffre": "2023-01-18T11:03:02.075"
+    }
+)
