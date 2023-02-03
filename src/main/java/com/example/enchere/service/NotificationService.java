@@ -17,11 +17,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import com.example.enchere.modele.Commission;
+import com.example.enchere.modele.Compte;
 import com.example.enchere.modele.Enchere;
 import com.example.enchere.modele.EnchereVendu;
 import com.example.enchere.modele.Notifications;
 import com.example.enchere.modele.Offre;
 import com.example.enchere.modele.Utilisateur;
+import com.example.enchere.repository.CommissionRepository;
+import com.example.enchere.repository.CompteRepository;
 import com.example.enchere.repository.EnchereRepository;
 import com.example.enchere.repository.EnchereVenduRepository;
 import com.example.enchere.repository.NotificationsRepository;
@@ -43,7 +47,14 @@ public class NotificationService {
     private NotificationsRepository notificationsRepository;
 
     @Autowired
+    private CompteRepository compteRepository;
+
+    @Autowired
     private OffreRepository offreRepository;
+
+    @Autowired
+    private CommissionRepository commissionRepository;
+
 
     public static final String REST_API_KEY = "MWRlNDVlOWUtYmNiMC00NDE1LTlhY2ItZTM4OWQ1YTVhMzk2";
     public static final String APP_ID = "a041247f-373d-40a0-bda9-0dbc7756deec";
@@ -118,6 +129,17 @@ public class NotificationService {
                 notificationsRepository.save(notif);
                 Offre max = offreRepository.getOffreMax(enchere.getIdEnchere());
                 if( max != null ){
+                    Compte compteGagnant = compteRepository.getCompte(max.getIdUtilisateur());
+                    double solde = compteGagnant.getSolde()-max.getPrixOffre();
+                    compteGagnant.setSolde(solde);
+                    compteRepository.save(compteGagnant);
+
+                    Compte fournisseur = compteRepository.getCompte(enchere.getIdUtilisateur());
+                    Commission c = commissionRepository.getCommission();
+                    double soldes = (max.getPrixOffre()*c.getTaux())/100;
+                    fournisseur.setSolde(soldes);
+                    compteRepository.save(fournisseur);
+
                     EnchereVendu ev = new EnchereVendu(max.getIdEnchere(), max.getIdOffre());
                     enchereVenduRepository.save(ev);
                 }
