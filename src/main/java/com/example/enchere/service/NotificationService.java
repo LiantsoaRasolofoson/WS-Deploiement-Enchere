@@ -202,7 +202,7 @@ public class NotificationService {
             Map<String,Object> data = new HashMap<>();
             data.put("app_id",APP_ID);
             data.put("included_segments",Arrays.asList("Subscribed Users"));
-            data.put("include_external_user_ids",Arrays.asList(userId));
+            // data.put("include_external_user_ids",Arrays.asList(userId));
 
             Map<String,String> contents = new HashMap<>();
             contents.put("en",message);
